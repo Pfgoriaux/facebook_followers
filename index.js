@@ -41,35 +41,6 @@ function countPageIds(html) {
   return matches ? matches.length : 0;
 }
 
-function extractFacebookId(html) {
-  try {
-    const primaryRegex = /\\"throwback_story_fbid\\":\\"(\d+)\\",\\"page_id\\":\\"(\d+)\\"/g;
-    const primaryMatch = primaryRegex.exec(html);
-    
-    if (primaryMatch) {
-      return {
-        throwback_story_fbid: primaryMatch[1],
-        page_id: primaryMatch[2]
-      };
-    }
-    
-    const fallbackRegex = /"is_business_page_active":(true|false),"id":"(\d+)"/g;
-    const fallbackMatch = fallbackRegex.exec(html);
-    
-    if (fallbackMatch) {
-      return {
-        is_business_page_active: fallbackMatch[1] === "true",
-        page_id: fallbackMatch[2]
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error extracting Facebook ID:`, error);
-    return null;
-  }
-}
-
 function extractSocialMetrics(html) {
   try {
     const input = {
@@ -242,16 +213,13 @@ app.get('/scrape', async (req, res) => {
       timeout: 10000
     });
 
-    const facebookId = extractFacebookId(html);
     const { likes, followers } = extractSocialMetrics(html);
     const pageIdCount = countPageIds(html);
 
     res.json({ 
       url: query,
-      pageIdCount,
       likes,
       followers,
-      ...facebookId,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
