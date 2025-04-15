@@ -213,6 +213,15 @@ app.get('/scrape', async (req, res) => {
       timeout: 10000
     });
 
+    // 🚨 Check for "not available" message BEFORE doing any further processing
+    if (html.includes("This content isn't available at the moment")) {
+      console.warn(`[SCRAPE] Content unavailable for ${query}`);
+      return res.status(404).json({
+        error: 'Content not available',
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const { likes, followers } = extractSocialMetrics(html);
     const pageIdCount = countPageIds(html);
 
@@ -234,6 +243,7 @@ app.get('/scrape', async (req, res) => {
     });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
