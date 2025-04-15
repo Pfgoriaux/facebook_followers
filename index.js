@@ -1,5 +1,5 @@
 const express = require('express');
-const { HttpProxyAgent } = require('http-proxy-agent');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const fetch = require('node-fetch');
 const app = express();
 
@@ -20,8 +20,7 @@ const USER_AGENTS = [
 
 
 const PROXIES = [
-  'http://hp_default_user_9d2ab612:HyPEqCFtcvjB57IubfvNY@hdc2.hypeproxy.host:7823',
-  'http://hp_default_user_58fab94e:HYpeRRzxm6wswJlDtlKIn@lte.hypeproxy.host:7216'
+  'http://core-residential.evomi.com:1000:pf1:aohO1vFtktPqpxrZMF4j',
 ];
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -131,7 +130,7 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
     console.log(`[FETCH] Attempt ${attempt}/${maxAttempts} using proxy: ${currentProxy}`);
 
     try {
-      const proxyAgent = new HttpProxyAgent(currentProxy);
+      const proxyAgent = new HttpsProxyAgent(currentProxy);
       const response = await fetch(url, {
         ...options,
         agent: proxyAgent,
