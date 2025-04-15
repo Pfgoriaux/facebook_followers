@@ -1,5 +1,5 @@
 const express = require('express');
-const { HttpsProxyAgent } = require('https-proxy-agent');
+const { HttpProxyAgent } = require('http-proxy-agent');
 const fetch = require('node-fetch');
 const app = express();
 
@@ -131,7 +131,7 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
     console.log(`[FETCH] Attempt ${attempt}/${maxAttempts} using proxy: ${currentProxy}`);
 
     try {
-      const proxyAgent = new HttpsProxyAgent(currentProxy);
+      const proxyAgent = new HttpProxyAgent(currentProxy);
       const response = await fetch(url, {
         ...options,
         agent: proxyAgent,
