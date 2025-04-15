@@ -29,7 +29,6 @@ const USER_AGENTS = [
 ];
 
 const PROXIES = [
-  'http://pf1:aohO1vFtktPqpxrZMF4j@core-residential.evomi.com:1000',
   'http://hp_default_user_9d2ab612:HyPEqCFtcvjB57IubfvNY@hdc2.hypeproxy.host:7823',
   'https://hp_default_user_58fab94e:HYpeRRzxm6wswJlDtlKIn@lte.hypeproxy.host:7216'
 ];
