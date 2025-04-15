@@ -6,20 +6,32 @@ const app = express();
 app.use(express.json());
 
 const USER_AGENTS = [
-  "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
-  "Mozilla/5.0 (Linux; Android 13; Pixel 7 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.196 Mobile Safari/537.36",
-  "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1",
-  "Mozilla/5.0 (Linux; Android 12; Samsung Galaxy S21) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.5672.132 Mobile Safari/537.36",
-  "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.137 Mobile Safari/537.36",
-  "Mozilla/5.0 (iPhone; CPU iPhone OS 14_8 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1",
-  "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.5563.58 Mobile Safari/537.36",
-  "Mozilla/5.0 (Linux; Android 9; Mi 9T Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.5414.117 Mobile Safari/537.36",
-  "Mozilla/5.0 (iPhone; CPU iPhone OS 13_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Mobile/15E148 Safari/604.1",
-  "Mozilla/5.0 (Linux; Android 8.1.0; Moto G6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.5359.128 Mobile Safari/537.36"
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/106.0",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/112.0",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36 Edg/100.0.1185.39",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.100 Safari/537.36 OPR/90.0.1234.567",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
+  "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_2_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.62",
+  "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.110 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/115.0",
+  "Mozilla/5.0 (X11; Linux i686; rv:68.0) Gecko/20100101 Firefox/68.0",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko",
+  "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36"
 ];
 
 const PROXIES = [
-  'https://pf1:aohO1vFtktPqpxrZMF4j@core-residential.evomi-proxy.com:1001'
+  'http://pf1:aohO1vFtktPqpxrZMF4j@core-residential.evomi.com:1000',
+  'http://hp_default_user_9d2ab612:HyPEqCFtcvjB57IubfvNY@hdc2.hypeproxy.host:7823',
+  'https://hp_default_user_58fab94e:HYpeRRzxm6wswJlDtlKIn@lte.hypeproxy.host:7216'
 ];
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -42,7 +54,9 @@ function extractSocialMetrics(html) {
     const results = input.all().map(item => {
       try {
         const rawData = item?.json?.data;
-        if (!rawData) throw new Error("No 'data' field found in the input JSON.");
+        if (!rawData) {
+          throw new Error("No 'data' field found in the input JSON.");
+        }
         
         const matches = [];
         let match;
@@ -52,18 +66,46 @@ function extractSocialMetrics(html) {
         while ((match = primaryRegex.exec(dataString)) !== null) {
           const isLike = /j'aime|J\u2019aime|likes?/i.test(match[0]);
           const type = isLike ? "like" : "follower";
-          let value = match[1].replace('\u00a0', '').replace(/[KM]/, '');
-          if (value.includes(',') && value.includes('.')) value = value.replace(',', '');
-          else if (value.includes(',')) value = value.replace(',', '.');
+          
+          let value = match[1];
+          const hasK = value.includes('K');
+          const hasM = value.includes('M');
+          
+          value = value.replace('\u00a0', '').replace(/[KM]/, '');
+          
+          if (value.includes(',') && value.includes('.')) {
+            value = value.replace(',', '');
+          } else if (value.includes(',')) {
+            value = value.replace(',', '.');
+          }
+          
           value = parseFloat(value);
-          if (match[1].includes('K')) value *= 1000;
-          if (match[1].includes('M')) value *= 1000000;
+          
+          if (hasK) {
+            value = value * 1000;
+          } else if (hasM) {
+            value = value * 1000000;
+          }
 
-          matches.push({ sentence: match[0], value, type });
+          matches.push({
+            sentence: match[0],
+            value: value,
+            type: type
+          });
         }
-        return { json: { matches } };
+        
+        return {
+          json: {
+            matches: matches
+          }
+        };
       } catch (error) {
-        return { json: { error: error.message, matches: [] } };
+        return {
+          json: {
+            error: error.message,
+            matches: []
+          }
+        };
       }
     });
 
@@ -81,9 +123,20 @@ function extractSocialMetrics(html) {
 
 async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
   let lastError;
+  const mainProxy = PROXIES[0];
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const currentProxy = PROXIES[0];
+    let currentProxy;
+    if (attempt === 1) {
+      currentProxy = mainProxy;
+    } else if (attempt === 2) {
+      currentProxy = mainProxy;
+    } else if (attempt === 3) {
+      currentProxy = PROXIES[1];
+    } else if (attempt === 4) {
+      currentProxy = PROXIES[2];
+    }
+    
     const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
     console.log(`[FETCH] Attempt ${attempt}/${maxAttempts} using proxy: ${currentProxy}`);
 
@@ -98,15 +151,18 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
         }
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const html = await response.text();
       const pageIdCount = countPageIds(html);
       console.log(`[FETCH] Found ${pageIdCount} page_ids on attempt ${attempt}`);
 
       if (pageIdCount <= 2 && attempt < maxAttempts) {
-        console.log(`[FETCH] Too few page_ids, trying again...`);
-        await sleep(1000);
+        console.log(`[FETCH] Too few page_ids, trying next proxy`);
+        const delay = 1000;
+        await sleep(delay);
         continue;
       }
 
@@ -120,8 +176,9 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
       });
 
       if (attempt < maxAttempts) {
-        console.log(`[FETCH] Waiting 1000ms before next attempt...`);
-        await sleep(1000);
+        const delay = 1000;
+        console.log(`[FETCH] Waiting ${delay}ms before next attempt...`);
+        await sleep(delay);
       }
     }
   }
@@ -135,7 +192,9 @@ app.get('/', (req, res) => {
 
 app.get('/scrape', async (req, res) => {
   const query = req.query.query;
-  if (!query) return res.status(400).json({ error: 'Missing query parameter' });
+  if (!query) {
+    return res.status(400).json({ error: 'Missing query parameter' });
+  }
 
   try {
     const { html } = await fetchWithSequentialProxies(query, {
@@ -163,13 +222,11 @@ app.get('/scrape', async (req, res) => {
       followers,
       timestamp: new Date().toISOString()
     });
-
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Final error for ${query}:`, {
       message: error.message,
       name: error.name
     });
-
     res.status(500).json({ 
       error: 'Scraping failed',
       details: error.message,
