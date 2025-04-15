@@ -19,7 +19,7 @@ const USER_AGENTS = [
 ];
 
 const PROXIES = [
-  'http://core-residential.evomi.com:1000:pf1:aohO1vFtktPqpxrZMF4j'
+  'http://pf1:aohO1vFtktPqpxrZMF4j:core-residential.evomi.com:1000'
 ];
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
