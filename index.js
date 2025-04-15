@@ -186,10 +186,6 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
   throw lastError;
 }
 
-app.get('/', (req, res) => {
-  res.status(200).json({ status: 'healthy' });
-});
-
 app.get('/scrape', async (req, res) => {
   const query = req.query.query;
   if (!query) {
@@ -213,8 +209,13 @@ app.get('/scrape', async (req, res) => {
       timeout: 10000
     });
 
-    // 🚨 Check for "not available" message BEFORE doing any further processing
-    if (html.includes("This content isn't available at the moment")) {
+    // Check for unavailable content
+    const contentUnavailable = (
+      html.includes("This content isn't available at the moment") ||
+      html.includes('"title":"This content isn\'t available at the moment"')
+    );
+
+    if (contentUnavailable) {
       console.warn(`[SCRAPE] Content unavailable for ${query}`);
       return res.status(404).json({
         error: 'Content not available',
@@ -243,6 +244,7 @@ app.get('/scrape', async (req, res) => {
     });
   }
 });
+
 
 
 const PORT = process.env.PORT || 3000;
