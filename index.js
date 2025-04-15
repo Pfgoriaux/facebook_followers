@@ -18,9 +18,8 @@ const USER_AGENTS = [
   "Mozilla/5.0 (Linux; Android 8.1.0; Moto G6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.5359.128 Mobile Safari/537.36"
 ];
 
-
 const PROXIES = [
-  'http://core-residential.evomi.com:1000:pf1:aohO1vFtktPqpxrZMF4j',
+  'http://core-residential.evomi.com:1000:pf1:aohO1vFtktPqpxrZMF4j'
 ];
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -43,9 +42,7 @@ function extractSocialMetrics(html) {
     const results = input.all().map(item => {
       try {
         const rawData = item?.json?.data;
-        if (!rawData) {
-          throw new Error("No 'data' field found in the input JSON.");
-        }
+        if (!rawData) throw new Error("No 'data' field found in the input JSON.");
         
         const matches = [];
         let match;
@@ -55,46 +52,18 @@ function extractSocialMetrics(html) {
         while ((match = primaryRegex.exec(dataString)) !== null) {
           const isLike = /j'aime|J\u2019aime|likes?/i.test(match[0]);
           const type = isLike ? "like" : "follower";
-          
-          let value = match[1];
-          const hasK = value.includes('K');
-          const hasM = value.includes('M');
-          
-          value = value.replace('\u00a0', '').replace(/[KM]/, '');
-          
-          if (value.includes(',') && value.includes('.')) {
-            value = value.replace(',', '');
-          } else if (value.includes(',')) {
-            value = value.replace(',', '.');
-          }
-          
+          let value = match[1].replace('\u00a0', '').replace(/[KM]/, '');
+          if (value.includes(',') && value.includes('.')) value = value.replace(',', '');
+          else if (value.includes(',')) value = value.replace(',', '.');
           value = parseFloat(value);
-          
-          if (hasK) {
-            value = value * 1000;
-          } else if (hasM) {
-            value = value * 1000000;
-          }
+          if (match[1].includes('K')) value *= 1000;
+          if (match[1].includes('M')) value *= 1000000;
 
-          matches.push({
-            sentence: match[0],
-            value: value,
-            type: type
-          });
+          matches.push({ sentence: match[0], value, type });
         }
-        
-        return {
-          json: {
-            matches: matches
-          }
-        };
+        return { json: { matches } };
       } catch (error) {
-        return {
-          json: {
-            error: error.message,
-            matches: []
-          }
-        };
+        return { json: { error: error.message, matches: [] } };
       }
     });
 
@@ -112,20 +81,9 @@ function extractSocialMetrics(html) {
 
 async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
   let lastError;
-  const mainProxy = PROXIES[0];
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    let currentProxy;
-    if (attempt === 1) {
-      currentProxy = mainProxy;
-    } else if (attempt === 2) {
-      currentProxy = mainProxy;
-    } else if (attempt === 3) {
-      currentProxy = PROXIES[1];
-    } else if (attempt === 4) {
-      currentProxy = PROXIES[2];
-    }
-    
+    const currentProxy = PROXIES[0];
     const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
     console.log(`[FETCH] Attempt ${attempt}/${maxAttempts} using proxy: ${currentProxy}`);
 
@@ -140,18 +98,15 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const html = await response.text();
       const pageIdCount = countPageIds(html);
       console.log(`[FETCH] Found ${pageIdCount} page_ids on attempt ${attempt}`);
 
       if (pageIdCount <= 2 && attempt < maxAttempts) {
-        console.log(`[FETCH] Too few page_ids, trying next proxy`);
-        const delay = 1000;
-        await sleep(delay);
+        console.log(`[FETCH] Too few page_ids, trying again...`);
+        await sleep(1000);
         continue;
       }
 
@@ -165,9 +120,8 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
       });
 
       if (attempt < maxAttempts) {
-        const delay = 1000;
-        console.log(`[FETCH] Waiting ${delay}ms before next attempt...`);
-        await sleep(delay);
+        console.log(`[FETCH] Waiting 1000ms before next attempt...`);
+        await sleep(1000);
       }
     }
   }
@@ -181,9 +135,7 @@ app.get('/', (req, res) => {
 
 app.get('/scrape', async (req, res) => {
   const query = req.query.query;
-  if (!query) {
-    return res.status(400).json({ error: 'Missing query parameter' });
-  }
+  if (!query) return res.status(400).json({ error: 'Missing query parameter' });
 
   try {
     const { html } = await fetchWithSequentialProxies(query, {
@@ -211,11 +163,13 @@ app.get('/scrape', async (req, res) => {
       followers,
       timestamp: new Date().toISOString()
     });
+
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Final error for ${query}:`, {
       message: error.message,
       name: error.name
     });
+
     res.status(500).json({ 
       error: 'Scraping failed',
       details: error.message,
