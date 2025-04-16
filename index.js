@@ -34,13 +34,96 @@ const PROXIES = [
   'http://hp_default_user_58fab94e:HYpeRRzxm6wswJlDtlKIn@lte.hypeproxy.host:7216'
 ];
 
+// Metrics collection for performance monitoring
+const metrics = {
+  requests: 0,
+  successes: 0,
+  failures: 0,
+  startTime: Date.now(),
+  
+  recordRequest: function(success) {
+    this.requests++;
+    if (success) {
+      this.successes++;
+    } else {
+      this.failures++;
+    }
+  },
+  
+  getStats: function() {
+    const uptime = Date.now() - this.startTime;
+    return {
+      uptime,
+      requests: this.requests,
+      successRate: this.requests > 0 ? (this.successes / this.requests) * 100 : 0,
+      requestsPerMinute: (this.requests / (uptime / 60000)).toFixed(2)
+    };
+  }
+};
+
+// Structured logging for better monitoring
+const logger = {
+  info: (message, data = {}) => {
+    console.log(JSON.stringify({
+      level: 'info',
+      timestamp: new Date().toISOString(),
+      message,
+      ...data
+    }));
+  },
+  error: (message, error, data = {}) => {
+    console.error(JSON.stringify({
+      level: 'error',
+      timestamp: new Date().toISOString(),
+      message,
+      error: error.message,
+      stack: error.stack,
+      ...data
+    }));
+  },
+  warn: (message, data = {}) => {
+    console.warn(JSON.stringify({
+      level: 'warn',
+      timestamp: new Date().toISOString(),
+      message,
+      ...data
+    }));
+  }
+};
+
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Validate and sanitize input URLs
+function validateFacebookUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    if (!parsedUrl.hostname.includes('facebook.com')) {
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Enhanced error handling with specific error types
+function handleScrapingError(error, url) {
+  if (error.code === 'ECONNREFUSED') {
+    return { error: 'Connection refused', status: 503 };
+  } else if (error.code === 'ETIMEDOUT') {
+    return { error: 'Request timed out', status: 504 };
+  } else if (error.message.includes('403')) {
+    return { error: 'Access forbidden - possible IP ban', status: 403 };
+  }
+  return { error: error.message, status: 500 };
+}
 
 function countPageIds(html) {
   const matches = html.match(/page_id/g);
   return matches ? matches.length : 0;
 }
 
+// Improved regex pattern for better data extraction
 function extractSocialMetrics(html) {
   try {
     const input = {
@@ -60,11 +143,12 @@ function extractSocialMetrics(html) {
         
         const matches = [];
         let match;
-        const primaryRegex = /"text":"([\d.,]+(?:\u00a0)?[KM]?)\s*(?:followers?|(?:j'aime|J\u2019aime|likes?))"/gi;
+        // Enhanced regex to catch more variations
+        const primaryRegex = /"text":"([\d.,]+(?:\u00a0)?[KM]?)\s*(?:followers?|(?:j'aime|J\u2019aime|likes?|people like this|personnes aiment ça))"/gi;
         const dataString = typeof rawData === "string" ? rawData : JSON.stringify(rawData);
         
         while ((match = primaryRegex.exec(dataString)) !== null) {
-          const isLike = /j'aime|J\u2019aime|likes?/i.test(match[0]);
+          const isLike = /j'aime|J\u2019aime|likes?|people like this|personnes aiment ça/i.test(match[0]);
           const type = isLike ? "like" : "follower";
           
           let value = match[1];
@@ -116,31 +200,49 @@ function extractSocialMetrics(html) {
     return { likes, followers };
 
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error extracting social metrics:`, error);
+    logger.error('Error extracting social metrics', error);
     return { likes: null, followers: null };
   }
 }
 
-async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
-  let lastError;
-  const mainProxy = PROXIES[0];
+// Improved proxy rotation strategy for Evomi and HypeProxy
+function getNextProxy(attempt, failedProxies = []) {
+  // Evomi proxy (first two attempts)
+  if (attempt <= 2) {
+    return PROXIES[0]; // Evomi proxy - will get a new IP each time
+  } 
+  // HypeProxy (attempts 3 and 4)
+  else if (attempt <= 4) {
+    // Use the appropriate HypeProxy based on attempt number
+    return PROXIES[attempt - 2]; // PROXIES[1] for attempt 3, PROXIES[2] for attempt 4
+  }
+  
+  return null; // All proxies exhausted
+}
 
+// Implement exponential backoff for retries
+async function fetchWithExponentialBackoff(url, options, maxAttempts = 4) {
+  const failedProxies = [];
+  
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    let currentProxy;
-    if (attempt === 1) {
-      currentProxy = mainProxy;
-    } else if (attempt === 2) {
-      currentProxy = mainProxy;
-    } else if (attempt === 3) {
-      currentProxy = PROXIES[1];
-    } else if (attempt === 4) {
-      currentProxy = PROXIES[2];
-    }
-    
-    const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-    console.log(`[FETCH] Attempt ${attempt}/${maxAttempts} using proxy: ${currentProxy}`);
-
     try {
+      const currentProxy = getNextProxy(attempt, failedProxies);
+      
+      if (!currentProxy) {
+        throw new Error('All proxies have failed');
+      }
+      
+      const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+      
+      // Log which proxy service we're using
+      const proxyService = attempt <= 2 ? 'Evomi' : 'HypeProxy';
+      logger.info(`Attempt ${attempt}/${maxAttempts} using ${proxyService}`, { 
+        attempt, 
+        maxAttempts, 
+        proxyService,
+        proxy: currentProxy.substring(0, 20) + '...' 
+      });
+
       const proxyAgent = new HttpsProxyAgent(currentProxy);
       const response = await fetch(url, {
         ...options,
@@ -157,11 +259,12 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
 
       const html = await response.text();
       const pageIdCount = countPageIds(html);
-      console.log(`[FETCH] Found ${pageIdCount} page_ids on attempt ${attempt}`);
+      logger.info(`Found ${pageIdCount} page_ids on attempt ${attempt}`, { pageIdCount, attempt });
 
       if (pageIdCount <= 2 && attempt < maxAttempts) {
-        console.log(`[FETCH] Too few page_ids, trying next proxy`);
-        const delay = 1000;
+        logger.warn(`Too few page_ids, trying next proxy`, { pageIdCount, attempt });
+        failedProxies.push(currentProxy);
+        const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff
         await sleep(delay);
         continue;
       }
@@ -169,31 +272,46 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 4) {
       return { response, html };
 
     } catch (error) {
-      lastError = error;
-      console.error(`[FETCH] Attempt ${attempt} failed:`, {
-        error: error.message,
-        proxy: currentProxy
-      });
-
+      logger.error(`Attempt ${attempt} failed`, error, { attempt, maxAttempts });
+      
       if (attempt < maxAttempts) {
-        const delay = 1000;
-        console.log(`[FETCH] Waiting ${delay}ms before next attempt...`);
+        const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff
+        logger.info(`Waiting ${delay}ms before next attempt...`, { delay });
         await sleep(delay);
+      } else {
+        throw error;
       }
     }
   }
-
-  throw lastError;
 }
+
+// Input validation middleware
+app.use('/scrape', (req, res, next) => {
+  const { query } = req.query;
+  
+  if (!query) {
+    return res.status(400).json({ 
+      error: 'Missing query parameter',
+      example: '/scrape?query=https://www.facebook.com/pagename'
+    });
+  }
+  
+  if (!validateFacebookUrl(query)) {
+    return res.status(400).json({ 
+      error: 'Invalid Facebook URL',
+      example: 'https://www.facebook.com/pagename'
+    });
+  }
+  
+  next();
+});
 
 app.get('/scrape', async (req, res) => {
   const query = req.query.query;
-  if (!query) {
-    return res.status(400).json({ error: 'Missing query parameter' });
-  }
-
+  metrics.recordRequest(false); // Start with failure, will update to success if it works
+  
   try {
-    const { html } = await fetchWithSequentialProxies(query, {
+    const { html } = await fetchWithExponentialBackoff(query, {
       method: 'GET',
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -216,7 +334,8 @@ app.get('/scrape', async (req, res) => {
     );
 
     if (contentUnavailable) {
-      console.warn(`[SCRAPE] Content unavailable for ${query}`);
+      logger.warn(`Content unavailable for ${query}`);
+      metrics.recordRequest(false);
       return res.status(404).json({
         error: 'Content not available',
         timestamp: new Date().toISOString()
@@ -225,6 +344,8 @@ app.get('/scrape', async (req, res) => {
 
     const { likes, followers } = extractSocialMetrics(html);
     const pageIdCount = countPageIds(html);
+    
+    metrics.recordRequest(true); // Mark as success
 
     res.json({ 
       url: query,
@@ -233,21 +354,24 @@ app.get('/scrape', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Final error for ${query}:`, {
-      message: error.message,
-      name: error.name
-    });
-    res.status(500).json({ 
+    logger.error(`Final error for ${query}`, error);
+    metrics.recordRequest(false);
+    
+    const { error: errorMessage, status } = handleScrapingError(error, query);
+    res.status(status).json({ 
       error: 'Scraping failed',
-      details: error.message,
+      details: errorMessage,
       timestamp: new Date().toISOString()
     });
   }
 });
 
-
+// Add metrics endpoint
+app.get('/metrics', (req, res) => {
+  res.json(metrics.getStats());
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`[${new Date().toISOString()}] Server started on port ${PORT}`);
+  logger.info(`Server started on port ${PORT}`);
 });
