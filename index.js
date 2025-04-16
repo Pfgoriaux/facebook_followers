@@ -264,7 +264,7 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 4) {
       if (pageIdCount <= 2 && attempt < maxAttempts) {
         logger.warn(`Too few page_ids, trying next proxy`, { pageIdCount, attempt });
         failedProxies.push(currentProxy);
-        const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff
+        const delay = Math.pow(2, attempt - 1) * 3000; // Exponential backoff
         await sleep(delay);
         continue;
       }
