@@ -30,8 +30,10 @@ const USER_AGENTS = [
 
 const PROXIES = [
   'http://pf1:aohO1vFtktPqpxrZMF4j@core-residential.evomi.com:1000',
-  'http://hp_default_user_9d2ab612:HyPEqCFtcvjB57IubfvNY@hdc2.hypeproxy.host:7823',
-  'http://hp_default_user_58fab94e:HYpeRRzxm6wswJlDtlKIn@lte.hypeproxy.host:7216'
+  'http://hp_default_user_dec90e40:Hype3JJa6eyMinWSsjoEO@hdc2.hypeproxy.host:7349',
+  'http://hp_default_user_9d2ab612:hypeKZzRwP5MIXPILgf1H@hdc2.hypeproxy.host:7823',
+  'http://hp_default_user_a76d136d:hyPE1mi9i5X7ydshj6Z18@hdc2.hypeproxy.host:7563',
+  'http://hp_default_user_58fab94e:Hype4FWMZDZO9RRlL1Vn5@hdc1.hypeproxy.host:7216'
 ];
 
 // Metrics collection for performance monitoring
@@ -207,21 +209,17 @@ function extractSocialMetrics(html) {
 
 // Improved proxy rotation strategy for Evomi and HypeProxy
 function getNextProxy(attempt, failedProxies = []) {
-  // Evomi proxy (first two attempts)
-  if (attempt <= 2) {
-    return PROXIES[0]; // Evomi proxy - will get a new IP each time
-  } 
-  // HypeProxy (attempts 3 and 4)
-  else if (attempt <= 4) {
-    // Use the appropriate HypeProxy based on attempt number
-    return PROXIES[attempt - 2]; // PROXIES[1] for attempt 3, PROXIES[2] for attempt 4
+  if (attempt <= 5) {
+    // Use proxies in sequence: Evomi first, then all HypeProxies
+    return PROXIES[attempt - 1];
   }
   
   return null; // All proxies exhausted
 }
 
+
 // Implement exponential backoff for retries
-async function fetchWithExponentialBackoff(url, options, maxAttempts = 4) {
+async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
   const failedProxies = [];
   
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
