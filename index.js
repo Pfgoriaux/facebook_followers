@@ -28,42 +28,18 @@ const USER_AGENTS = [
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36"
 ];
 
+// Define proxies with their types for better logging
 const PROXIES = [
-  'http://pf1:aohO1vFtktPqpxrZMF4j@core-residential.evomi.com:1000',
-  'http://hp_default_user_dec90e40:Hype3JJa6eyMinWSsjoEO@hdc2.hypeproxy.host:7349',
-  'http://hp_default_user_9d2ab612:hypeKZzRwP5MIXPILgf1H@hdc2.hypeproxy.host:7823',
-  'http://hp_default_user_a76d136d:hyPE1mi9i5X7ydshj6Z18@hdc2.hypeproxy.host:7563',
-  'http://hp_default_user_58fab94e:Hype4FWMZDZO9RRlL1Vn5@hdc1.hypeproxy.host:7216'
+  { url: 'http://pf1:aohO1vFtktPqpxrZMF4j@core-residential.evomi.com:1000', type: 'Evomi' },
+  { url: 'http://hp_default_user_dec90e40:Hype3JJa6eyMinWSsjoEO@hdc2.hypeproxy.host:7349', type: 'HypeProxy' },
+  { url: 'http://hp_default_user_9d2ab612:hypeKZzRwP5MIXPILgf1H@hdc2.hypeproxy.host:7823', type: 'HypeProxy' },
+  { url: 'http://hp_default_user_a76d136d:hyPE1mi9i5X7ydshj6Z18@hdc2.hypeproxy.host:7563', type: 'HypeProxy' },
+  { url: 'http://hp_default_user_58fab94e:Hype4FWMZDZO9RRlL1Vn5@hdc1.hypeproxy.host:7216', type: 'HypeProxy' }
 ];
 
-// Metrics collection for performance monitoring
-const metrics = {
-  requests: 0,
-  successes: 0,
-  failures: 0,
-  startTime: Date.now(),
-  
-  recordRequest: function(success) {
-    this.requests++;
-    if (success) {
-      this.successes++;
-    } else {
-      this.failures++;
-    }
-  },
-  
-  getStats: function() {
-    const uptime = Date.now() - this.startTime;
-    return {
-      uptime,
-      requests: this.requests,
-      successRate: this.requests > 0 ? (this.successes / this.requests) * 100 : 0,
-      requestsPerMinute: (this.requests / (uptime / 60000)).toFixed(2)
-    };
-  }
-};
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Structured logging for better monitoring
+// Enhanced structured logging
 const logger = {
   info: (message, data = {}) => {
     console.log(JSON.stringify({
@@ -93,39 +69,40 @@ const logger = {
   }
 };
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Validate and sanitize input URLs
-function validateFacebookUrl(url) {
-  try {
-    const parsedUrl = new URL(url);
-    if (!parsedUrl.hostname.includes('facebook.com')) {
-      return false;
-    }
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// Enhanced error handling with specific error types
-function handleScrapingError(error, url) {
-  if (error.code === 'ECONNREFUSED') {
-    return { error: 'Connection refused', status: 503 };
-  } else if (error.code === 'ETIMEDOUT') {
-    return { error: 'Request timed out', status: 504 };
-  } else if (error.message.includes('403')) {
-    return { error: 'Access forbidden - possible IP ban', status: 403 };
-  }
-  return { error: error.message, status: 500 };
-}
-
 function countPageIds(html) {
   const matches = html.match(/page_id/g);
   return matches ? matches.length : 0;
 }
 
-// Improved regex pattern for better data extraction
+function extractFacebookId(html) {
+  try {
+    const primaryRegex = /\\"throwback_story_fbid\\":\\"(\d+)\\",\\"page_id\\":\\"(\d+)\\"/g;
+    const primaryMatch = primaryRegex.exec(html);
+    
+    if (primaryMatch) {
+      return {
+        throwback_story_fbid: primaryMatch[1],
+        page_id: primaryMatch[2]
+      };
+    }
+    
+    const fallbackRegex = /"is_business_page_active":(true|false),"id":"(\d+)"/g;
+    const fallbackMatch = fallbackRegex.exec(html);
+    
+    if (fallbackMatch) {
+      return {
+        is_business_page_active: fallbackMatch[1] === "true",
+        page_id: fallbackMatch[2]
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    logger.error('Error extracting Facebook ID', error);
+    return null;
+  }
+}
+
 function extractSocialMetrics(html) {
   try {
     const input = {
@@ -145,12 +122,11 @@ function extractSocialMetrics(html) {
         
         const matches = [];
         let match;
-        // Enhanced regex to catch more variations
-        const primaryRegex = /"text":"([\d.,]+(?:\u00a0)?[KM]?)\s*(?:followers?|(?:j'aime|J\u2019aime|likes?|people like this|personnes aiment ça))"/gi;
+        const primaryRegex = /"text":"([\d.,]+(?:\u00a0)?[KM]?)\s*(?:followers?|(?:j'aime|J\u2019aime|likes?))"/gi;
         const dataString = typeof rawData === "string" ? rawData : JSON.stringify(rawData);
         
         while ((match = primaryRegex.exec(dataString)) !== null) {
-          const isLike = /j'aime|J\u2019aime|likes?|people like this|personnes aiment ça/i.test(match[0]);
+          const isLike = /j'aime|J\u2019aime|likes?/i.test(match[0]);
           const type = isLike ? "like" : "follower";
           
           let value = match[1];
@@ -207,41 +183,33 @@ function extractSocialMetrics(html) {
   }
 }
 
-// Improved proxy rotation strategy for Evomi and HypeProxy
-function getNextProxy(attempt, failedProxies = []) {
-  if (attempt <= 5) {
-    // Use proxies in sequence: Evomi first, then all HypeProxies
-    return PROXIES[attempt - 1];
-  }
-  
-  return null; // All proxies exhausted
+// A request ID generator to track concurrent requests
+let requestCounter = 0;
+function getRequestId() {
+  return `req-${Date.now()}-${++requestCounter}`;
 }
 
+async function fetchWithSequentialProxies(url, options, maxAttempts = 5, requestId) {
+  let lastError;
 
-// Implement exponential backoff for retries
-async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
-  const failedProxies = [];
-  
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const currentProxy = getNextProxy(attempt, failedProxies);
-      
-      if (!currentProxy) {
-        throw new Error('All proxies have failed');
-      }
-      
-      const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-      
-      // Log which proxy service we're using
-      const proxyService = attempt <= 2 ? 'Evomi' : 'HypeProxy';
-      logger.info(`Attempt ${attempt}/${maxAttempts} using ${proxyService}`, { 
-        attempt, 
-        maxAttempts, 
-        proxyService,
-        proxy: currentProxy.substring(0, 20) + '...' 
-      });
+    // Get proxy for this attempt, ensuring sequential order
+    const proxyInfo = PROXIES[attempt - 1];
+    
+    // Log proxy selection with request ID for tracing
+    logger.info(`Attempt ${attempt}/${maxAttempts} using ${proxyInfo.type}`, {
+      attempt,
+      maxAttempts,
+      proxyType: proxyInfo.type,
+      proxyId: attempt,
+      requestId,
+      proxyUrl: proxyInfo.url.substring(0, 15) + '...'
+    });
 
-      const proxyAgent = new HttpsProxyAgent(currentProxy);
+    const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+
+    try {
+      const proxyAgent = new HttpsProxyAgent(proxyInfo.url);
       const response = await fetch(url, {
         ...options,
         agent: proxyAgent,
@@ -257,12 +225,21 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
 
       const html = await response.text();
       const pageIdCount = countPageIds(html);
-      logger.info(`Found ${pageIdCount} page_ids on attempt ${attempt}`, { pageIdCount, attempt });
+      
+      logger.info(`Found ${pageIdCount} page_ids on attempt ${attempt}`, {
+        pageIdCount,
+        attempt,
+        requestId
+      });
 
       if (pageIdCount <= 2 && attempt < maxAttempts) {
-        logger.warn(`Too few page_ids, trying next proxy`, { pageIdCount, attempt });
-        failedProxies.push(currentProxy);
-        const delay = Math.pow(2, attempt - 1) * 3000; // Exponential backoff
+        logger.warn(`Too few page_ids, trying next proxy`, {
+          pageIdCount,
+          attempt,
+          requestId
+        });
+        
+        const delay = 1000;
         await sleep(delay);
         continue;
       }
@@ -270,46 +247,46 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
       return { response, html };
 
     } catch (error) {
-      logger.error(`Attempt ${attempt} failed`, error, { attempt, maxAttempts });
-      
+      lastError = error;
+      logger.error(`Attempt ${attempt} failed`, error, {
+        attempt,
+        requestId,
+        proxyType: proxyInfo.type
+      });
+
       if (attempt < maxAttempts) {
-        const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff
-        logger.info(`Waiting ${delay}ms before next attempt...`, { delay });
+        const delay = 1000;
+        logger.info(`Waiting ${delay}ms before next attempt...`, {
+          delay,
+          nextAttempt: attempt + 1,
+          requestId
+        });
         await sleep(delay);
-      } else {
-        throw error;
       }
     }
   }
+
+  throw lastError;
 }
 
-// Input validation middleware
-app.use('/scrape', (req, res, next) => {
-  const { query } = req.query;
-  
-  if (!query) {
-    return res.status(400).json({ 
-      error: 'Missing query parameter',
-      example: '/scrape?query=https://www.facebook.com/pagename'
-    });
-  }
-  
-  if (!validateFacebookUrl(query)) {
-    return res.status(400).json({ 
-      error: 'Invalid Facebook URL',
-      example: 'https://www.facebook.com/pagename'
-    });
-  }
-  
-  next();
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'healthy' });
 });
 
 app.get('/scrape', async (req, res) => {
-  const query = req.query.query;
-  metrics.recordRequest(false); // Start with failure, will update to success if it works
+  const requestId = getRequestId();
+  logger.info('New scrape request received', { requestId });
   
+  const query = req.query.query;
+  if (!query) {
+    logger.warn('Missing query parameter', { requestId });
+    return res.status(400).json({ error: 'Missing query parameter' });
+  }
+
   try {
-    const { html } = await fetchWithExponentialBackoff(query, {
+    logger.info(`Starting scrape for: ${query}`, { requestId });
+    
+    const { html } = await fetchWithSequentialProxies(query, {
       method: 'GET',
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -323,50 +300,38 @@ app.get('/scrape', async (req, res) => {
         'Sec-Fetch-User': '?1'
       },
       timeout: 10000
-    });
+    }, 5, requestId);
 
-    // Check for unavailable content
-    const contentUnavailable = (
-      html.includes("This content isn't available at the moment") ||
-      html.includes('"title":"This content isn\'t available at the moment"')
-    );
-
-    if (contentUnavailable) {
-      logger.warn(`Content unavailable for ${query}`);
-      metrics.recordRequest(false);
-      return res.status(404).json({
-        error: 'Content not available',
-        timestamp: new Date().toISOString()
-      });
-    }
-
+    const facebookId = extractFacebookId(html);
     const { likes, followers } = extractSocialMetrics(html);
     const pageIdCount = countPageIds(html);
-    
-    metrics.recordRequest(true); // Mark as success
+
+    logger.info('Scrape completed successfully', { 
+      requestId, 
+      url: query,
+      pageIdCount,
+      hasLikes: likes !== null,
+      hasFollowers: followers !== null,
+      hasFacebookId: facebookId !== null
+    });
 
     res.json({ 
       url: query,
+      pageIdCount,
       likes,
       followers,
+      ...facebookId,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    logger.error(`Final error for ${query}`, error);
-    metrics.recordRequest(false);
+    logger.error(`Final error for ${query}`, error, { requestId });
     
-    const { error: errorMessage, status } = handleScrapingError(error, query);
-    res.status(status).json({ 
+    res.status(500).json({ 
       error: 'Scraping failed',
-      details: errorMessage,
+      details: error.message,
       timestamp: new Date().toISOString()
     });
   }
-});
-
-// Add metrics endpoint
-app.get('/metrics', (req, res) => {
-  res.json(metrics.getStats());
 });
 
 const PORT = process.env.PORT || 3000;
