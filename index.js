@@ -110,23 +110,21 @@ function extractSocialMetrics(html) {
       followers: null
     };
 
-    // Match number followed by "J’aime" or "followers"
-    const regex = /([\d.,]+)\s*K?\s*(?:<\/a>\s*)?([\u2022.·•]?\s*)?(J’aime|J\u2019aime|j'aime|followers?)/gi;
+    // Match things like "3.8K likes" or "4K followers" in any order
+    const regex = /([\d.,]+)\s*(K|M)?\s*(likes?|j’aime|j'aime|J\u2019aime|followers?)/gi;
 
     let match;
     while ((match = regex.exec(html)) !== null) {
-      const rawValue = match[1];
+      let value = match[1];
+      const unit = match[2];
       const label = match[3].toLowerCase();
 
-      let value = parseFloat(
-        rawValue.replace(/\./g, '').replace(',', '.')
-      );
+      value = parseFloat(value.replace(',', '.'));
 
-      // Scale if K/M present
-      if (/K/i.test(rawValue)) value *= 1000;
-      if (/M/i.test(rawValue)) value *= 1000000;
+      if (unit?.toUpperCase() === 'K') value *= 1000;
+      if (unit?.toUpperCase() === 'M') value *= 1000000;
 
-      if (label.includes("j’aime") || label.includes("like")) {
+      if (label.includes("like") || label.includes("j’aime") || label.includes("j'aime")) {
         metrics.likes = value;
       } else if (label.includes("follower")) {
         metrics.followers = value;
