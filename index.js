@@ -189,27 +189,29 @@ function getRequestId() {
   return `req-${Date.now()}-${++requestCounter}`;
 }
 
-async function fetchWithSequentialProxies(url, options, maxAttempts = 5, requestId) {
-  let lastError;
+async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
+  const failedProxies = new Set();
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    // Get proxy for this attempt, ensuring sequential order
-    const proxyInfo = PROXIES[attempt - 1];
-    
-    // Log proxy selection with request ID for tracing
-    logger.info(`Attempt ${attempt}/${maxAttempts} using ${proxyInfo.type}`, {
+    // Choisir le prochain proxy non encore échoué
+    const availableProxies = PROXIES.filter(p => !failedProxies.has(p));
+    if (availableProxies.length === 0) {
+      throw new Error('All proxies have failed');
+    }
+
+    const currentProxy = availableProxies[(attempt - 1) % availableProxies.length];
+    const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+    const proxyService = currentProxy.includes('evomi') ? 'Evomi' : 'HypeProxy';
+
+    logger.info(`Attempt ${attempt}/${maxAttempts} using ${proxyService}`, {
       attempt,
       maxAttempts,
-      proxyType: proxyInfo.type,
-      proxyId: attempt,
-      requestId,
-      proxyUrl: proxyInfo.url.substring(0, 15) + '...'
+      proxyService,
+      proxy: currentProxy.substring(0, 20) + '...'
     });
 
-    const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-
     try {
-      const proxyAgent = new HttpsProxyAgent(proxyInfo.url);
+      const proxyAgent = new HttpsProxyAgent(currentProxy);
       const response = await fetch(url, {
         ...options,
         agent: proxyAgent,
@@ -224,49 +226,24 @@ async function fetchWithSequentialProxies(url, options, maxAttempts = 5, request
       }
 
       const html = await response.text();
-      const pageIdCount = countPageIds(html);
-      
-      logger.info(`Found ${pageIdCount} page_ids on attempt ${attempt}`, {
-        pageIdCount,
-        attempt,
-        requestId
-      });
-
-      if (pageIdCount <= 2 && attempt < maxAttempts) {
-        logger.warn(`Too few page_ids, trying next proxy`, {
-          pageIdCount,
-          attempt,
-          requestId
-        });
-        
-        const delay = 1000;
-        await sleep(delay);
-        continue;
-      }
-
-      return { response, html };
+      logger.info(`Successfully fetched data on attempt ${attempt}`);
+      return html;
 
     } catch (error) {
-      lastError = error;
-      logger.error(`Attempt ${attempt} failed`, error, {
-        attempt,
-        requestId,
-        proxyType: proxyInfo.type
-      });
+      logger.error(`Attempt ${attempt} failed`, error, { attempt, maxAttempts });
+
+      // Marquer ce proxy comme échoué
+      failedProxies.add(currentProxy);
 
       if (attempt < maxAttempts) {
-        const delay = 1000;
-        logger.info(`Waiting ${delay}ms before next attempt...`, {
-          delay,
-          nextAttempt: attempt + 1,
-          requestId
-        });
+        const delay = Math.pow(2, attempt - 1) * 3000;
+        logger.info(`Waiting ${delay / 1000} seconds before next attempt...`, { delay });
         await sleep(delay);
+      } else {
+        throw error;
       }
     }
   }
-
-  throw lastError;
 }
 
 app.get('/', (req, res) => {
