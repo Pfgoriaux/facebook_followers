@@ -193,25 +193,23 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
   const failedProxies = new Set();
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    // Choisir le prochain proxy non encore échoué
-    const availableProxies = PROXIES.filter(p => !failedProxies.has(p));
+    const availableProxies = PROXIES.filter(p => !failedProxies.has(p.url));
     if (availableProxies.length === 0) {
       throw new Error('All proxies have failed');
     }
 
     const currentProxy = availableProxies[(attempt - 1) % availableProxies.length];
     const randomUserAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-    const proxyService = currentProxy.includes('evomi') ? 'Evomi' : 'HypeProxy';
 
-    logger.info(`Attempt ${attempt}/${maxAttempts} using ${proxyService}`, {
+    logger.info(`Attempt ${attempt}/${maxAttempts} using ${currentProxy.type}`, {
       attempt,
       maxAttempts,
-      proxyService,
-      proxy: currentProxy.substring(0, 20) + '...'
+      proxyService: currentProxy.type,
+      proxy: currentProxy.url.substring(0, 20) + '...'
     });
 
     try {
-      const proxyAgent = new HttpsProxyAgent(currentProxy);
+      const proxyAgent = new HttpsProxyAgent(currentProxy.url);
       const response = await fetch(url, {
         ...options,
         agent: proxyAgent,
@@ -232,8 +230,8 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
     } catch (error) {
       logger.error(`Attempt ${attempt} failed`, error, { attempt, maxAttempts });
 
-      // Marquer ce proxy comme échoué
-      failedProxies.add(currentProxy);
+      // Mark proxy as failed (use the `.url` for Set comparison)
+      failedProxies.add(currentProxy.url);
 
       if (attempt < maxAttempts) {
         const delay = Math.pow(2, attempt - 1) * 3000;
@@ -245,6 +243,7 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
     }
   }
 }
+
 
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'healthy' });
