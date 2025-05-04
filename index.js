@@ -281,7 +281,7 @@ const html = await fetchWithExponentialBackoff(query, {
 // ✅ Check for "Shop not found"
 if (
   html.includes(`"props":{"title":"This content isn't available at the moment"`) ||
-  html.includes(`Ce contenu n’est pas disponible pour le moment`)
+    html.includes(`"props":{"title":"Ce contenu n\\u2019est pas disponible pour le moment"`)
 ) {
   logger.warn(`Facebook Down`, { requestId, url: query });
   return res.status(404).json({
