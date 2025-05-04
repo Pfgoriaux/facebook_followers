@@ -105,80 +105,38 @@ function extractFacebookId(html) {
 
 function extractSocialMetrics(html) {
   try {
-    const input = {
-      all: () => [{
-        json: {
-          data: html
-        }
-      }]
+    const metrics = {
+      likes: null,
+      followers: null
     };
 
-    const results = input.all().map(item => {
-      try {
-        const rawData = item?.json?.data;
-        if (!rawData) {
-          throw new Error("No 'data' field found in the input JSON.");
-        }
-        
-        const matches = [];
-        let match;
-        const primaryRegex = /([\d.,]+(?:\s|\u00a0)?[KM]?)\s*(followers?|j’aime|j'aime|J\u2019aime|likes?)/gi;
-        const dataString = typeof rawData === "string" ? rawData : JSON.stringify(rawData);
-        
-        while ((match = primaryRegex.exec(dataString)) !== null) {
-          const isLike = /j'aime|J\u2019aime|likes?/i.test(match[0]);
-          const type = isLike ? "like" : "follower";
-          
-          let value = match[1];
-          const hasK = value.includes('K');
-          const hasM = value.includes('M');
-          
-          value = value.replace('\u00a0', '').replace(/[KM]/, '');
-          
-          if (value.includes(',') && value.includes('.')) {
-            value = value.replace(',', '');
-          } else if (value.includes(',')) {
-            value = value.replace(',', '.');
-          }
-          
-          value = parseFloat(value);
-          
-          if (hasK) {
-            value = value * 1000;
-          } else if (hasM) {
-            value = value * 1000000;
-          }
+    // Match number followed by "J’aime" or "followers"
+    const regex = /([\d.,]+)\s*K?\s*(?:<\/a>\s*)?([\u2022.·•]?\s*)?(J’aime|J\u2019aime|j'aime|followers?)/gi;
 
-          matches.push({
-            sentence: match[0],
-            value: value,
-            type: type
-          });
-        }
-        
-        return {
-          json: {
-            matches: matches
-          }
-        };
-      } catch (error) {
-        return {
-          json: {
-            error: error.message,
-            matches: []
-          }
-        };
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+      const rawValue = match[1];
+      const label = match[3].toLowerCase();
+
+      let value = parseFloat(
+        rawValue.replace(/\./g, '').replace(',', '.')
+      );
+
+      // Scale if K/M present
+      if (/K/i.test(rawValue)) value *= 1000;
+      if (/M/i.test(rawValue)) value *= 1000000;
+
+      if (label.includes("j’aime") || label.includes("like")) {
+        metrics.likes = value;
+      } else if (label.includes("follower")) {
+        metrics.followers = value;
       }
-    });
+    }
 
-    const metrics = results[0]?.json?.matches || [];
-    const likes = metrics.find(m => m.type === 'like')?.value || null;
-    const followers = metrics.find(m => m.type === 'follower')?.value || null;
-
-    return { likes, followers };
+    return metrics;
 
   } catch (error) {
-    logger.error('Error extracting social metrics', error);
+    logger.error("Error extracting social metrics", error);
     return { likes: null, followers: null };
   }
 }
