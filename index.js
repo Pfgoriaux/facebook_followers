@@ -263,7 +263,7 @@ app.get('/scrape', async (req, res) => {
   try {
     logger.info(`Starting scrape for: ${query}`, { requestId });
     
-    const { html } = await fetchWithSequentialProxies(query, {
+    const { html } = await fetchWithExponentialBackoff(query, {
       method: 'GET',
       headers: {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
