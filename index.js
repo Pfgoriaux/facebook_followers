@@ -262,21 +262,32 @@ app.get('/scrape', async (req, res) => {
   try {
     logger.info(`Starting scrape for: ${query}`, { requestId });
     
-    const html = await fetchWithExponentialBackoff(query, {
-      method: 'GET',
-      headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1'
-      },
-      timeout: 10000
-    }, 5, requestId);
+const html = await fetchWithExponentialBackoff(query, {
+  method: 'GET',
+  headers: {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1'
+  },
+  timeout: 10000
+}, 5, requestId);
+
+// ✅ Check for "Shop not found"
+if (html.includes(`"props":{"title":"This content isn't available at the moment"`)) {
+  logger.warn(`Facebook Down`, { requestId, url: query });
+  return res.status(404).json({
+    error: 'Facebook Down',
+    url: query,
+    timestamp: new Date().toISOString()
+  });
+}
+
 
     const facebookId = extractFacebookId(html);
     const { likes, followers } = extractSocialMetrics(html);
