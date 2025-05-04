@@ -122,7 +122,7 @@ function extractSocialMetrics(html) {
         
         const matches = [];
         let match;
-        const primaryRegex = /"text":"([\d.,]+(?:\u00a0)?[KM]?)\s*(?:followers?|(?:j'aime|J\u2019aime|likes?))"/gi;
+        const primaryRegex = /([\d.,]+(?:\s|\u00a0)?[KM]?)\s*(followers?|j’aime|j'aime|J\u2019aime|likes?)/gi;
         const dataString = typeof rawData === "string" ? rawData : JSON.stringify(rawData);
         
         while ((match = primaryRegex.exec(dataString)) !== null) {
@@ -281,7 +281,7 @@ const html = await fetchWithExponentialBackoff(query, {
 // ✅ Check for "Shop not found"
 if (
   html.includes(`"props":{"title":"This content isn't available at the moment"`) ||
-    html.includes(`"props":{"title":"Ce contenu n\\u2019est pas disponible pour le moment"`)
+  html.includes(`"props":{"title":"Ce contenu n\\u2019est pas disponible pour le moment"`)
 ) {
   logger.warn(`Facebook Down`, { requestId, url: query });
   return res.status(404).json({
