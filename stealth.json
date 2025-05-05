@@ -1,0 +1,248 @@
+[
+  {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Sec-CH-UA": "\"Chromium\";v=\"124\", \"Google Chrome\";v=\"124\", \"Not:A-Brand\";v=\"99\"",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"Windows\"",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "en-GB,en;q=0.8",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"macOS\"",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "cross-site"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Sec-CH-UA": "\"Microsoft Edge\";v=\"124\", \"Chromium\";v=\"124\", \"Not:A-Brand\";v=\"99\"",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"Windows\"",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8",
+      "DNT": "1",
+      "Upgrade-Insecure-Requests": "1",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "cross-site",
+      "Sec-Fetch-User": "?1"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Sec-CH-UA": "\"Chromium\";v=\"123\", \"Google Chrome\";v=\"123\", \"Not:A-Brand\";v=\"99\"",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"macOS\"",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
+      "DNT": "1",
+      "Upgrade-Insecure-Requests": "1",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-User": "?1"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Language": "en-CA,en-US;q=0.9,en;q=0.8",
+      "DNT": "1",
+      "Upgrade-Insecure-Requests": "1",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 OPR/109.0.0.0",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Language": "en-GB,en;q=0.9",
+      "Sec-CH-UA": "\"Opera\";v=\"109\", \"Chromium\";v=\"123\", \"Not:A-Brand\";v=\"99\"",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"Windows\"",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Vivaldi/6.1.3035.111",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+      "Sec-CH-UA": "\"Vivaldi\";v=\"6.1\", \"Chromium\";v=\"124\", \"Not:A-Brand\";v=\"99\"",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"macOS\"",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  },
+  {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Brave/124.1.63.145",
+    "extraHTTPHeaders": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Sec-CH-UA": "\"Brave\";v=\"124\", \"Chromium\";v=\"124\", \"Not:A-Brand\";v=\"99\"",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"Windows\"",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-GPC": "1"
+    },
+    "cookies": {
+      "_shopify_y": "true",
+      "_s": "randomstring123456",
+      "_shopify_fs": "2023-04-23T10:15:30Z",
+      "cart_currency": "USD",
+      "_shopify_sa_p": "",
+      "cart": "c1-randomhash12345",
+      "_shopify_sa_t": "2023-04-23T15:30:45Z",
+      "_shopify_country": "US",
+      "_shopify_visit": "randomhash123456789",
+      "_orig_referrer": "https://www.google.com/"
+    }
+  }
+]
