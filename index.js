@@ -11,11 +11,11 @@ const stealthProfiles = JSON.parse(fs.readFileSync(path.join(__dirname, 'stealth
 
 // Define proxies with their types for better logging
 const PROXIES = [
-  { url: 'http://hp_default_user_dec90e40:Hype3JJa6eyMinWSsjoEO@hdc2.hypeproxy.host:7349', type: 'HypeProxy' },
+    { url: 'http://hp_default_user_58fab94e:Hype4FWMZDZO9RRlL1Vn5@hdc1.hypeproxy.host:7216', type: 'HypeProxy' },
   { url: 'http://pf1:aohO1vFtktPqpxrZMF4j_country-US,GB@core-residential.evomi.com:1000', type: 'Evomi' },
   { url: 'http://hp_default_user_9d2ab612:hypeKZzRwP5MIXPILgf1H@hdc2.hypeproxy.host:7823', type: 'HypeProxy' },
   { url: 'http://hp_default_user_a76d136d:hyPE1mi9i5X7ydshj6Z18@hdc2.hypeproxy.host:7563', type: 'HypeProxy' },
-  { url: 'http://hp_default_user_58fab94e:Hype4FWMZDZO9RRlL1Vn5@hdc1.hypeproxy.host:7216', type: 'HypeProxy' }
+    { url: 'http://hp_default_user_dec90e40:Hype3JJa6eyMinWSsjoEO@hdc2.hypeproxy.host:7349', type: 'HypeProxy' }
 ];
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
