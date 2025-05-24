@@ -92,7 +92,7 @@ function extractSocialMetrics(html) {
     };
 
     // Match things like "3.8K likes" or "4K followers" in any order
-    const regex = /([\d.,]+)\s*(K|M)?\s*(likes?|j’aime|j'aime|J\u2019aime|followers?)/gi;
+    const regex = /([\d.,]+)\s*(K|M)?\s*(likes?|j'aime|j'aime|J\u2019aime|followers?)/gi;
 
     let match;
     while ((match = regex.exec(html)) !== null) {
@@ -105,7 +105,7 @@ function extractSocialMetrics(html) {
       if (unit?.toUpperCase() === 'K') value *= 1000;
       if (unit?.toUpperCase() === 'M') value *= 1000000;
 
-      if (label.includes("like") || label.includes("j’aime") || label.includes("j'aime")) {
+      if (label.includes("like") || label.includes("j'aime") || label.includes("j'aime")) {
         metrics.likes = value;
       } else if (label.includes("follower")) {
         metrics.followers = value;
@@ -135,7 +135,8 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
       throw new Error('All proxies have failed');
     }
 
-    const currentProxy = availableProxies[(attempt - 1) % availableProxies.length];
+    // Rotation séquentielle : toujours prendre le premier proxy disponible
+    const currentProxy = availableProxies[0];
     const stealth = stealthProfiles[Math.floor(Math.random() * stealthProfiles.length)];
 
     logger.info(`Attempt ${attempt}/${maxAttempts} using ${currentProxy.type}`, {
@@ -144,6 +145,12 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
       proxyService: currentProxy.type,
       proxy: currentProxy.url.substring(0, 20) + '...'
     });
+
+    // Créer un AbortController pour le timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 30000); // 30 secondes de timeout
 
     try {
       const proxyAgent = new HttpsProxyAgent(currentProxy.url);
@@ -165,8 +172,12 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
       const response = await fetch(url, {
         ...options,
         agent: proxyAgent,
-        headers
+        headers,
+        signal: controller.signal,  // Ajouter le signal pour le timeout
+        timeout: 30000             // Backup timeout (node-fetch)
       });
+
+      clearTimeout(timeoutId); // Nettoyer le timeout si succès
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -177,7 +188,13 @@ async function fetchWithExponentialBackoff(url, options, maxAttempts = 5) {
       return html;
 
     } catch (error) {
-      logger.error(`Attempt ${attempt} failed`, error, { attempt, maxAttempts });
+      clearTimeout(timeoutId); // Nettoyer le timeout en cas d'erreur
+      
+      if (error.name === 'AbortError') {
+        logger.error(`Attempt ${attempt} timed out after 30 seconds`, error, { attempt, maxAttempts });
+      } else {
+        logger.error(`Attempt ${attempt} failed`, error, { attempt, maxAttempts });
+      }
 
       // Mark proxy as failed (use the `.url` for Set comparison)
       failedProxies.add(currentProxy.url);
